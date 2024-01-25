@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ImgApiForNg.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ImgApiForNg.Data
 {
@@ -8,6 +9,6 @@ namespace ImgApiForNg.Data
         {
         }
 
-        //public DbSet<Image> Images { get; set; }
+        public DbSet<Employee> Employees { get; set; }
     }
 }
