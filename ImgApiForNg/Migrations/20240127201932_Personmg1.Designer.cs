@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ImgApiForNg.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240125220517_person")]
-    partial class person
+    [Migration("20240127201932_Personmg1")]
+    partial class Personmg1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,6 +69,37 @@ namespace ImgApiForNg.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("ImgApiForNg.Models.Person", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("city")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("picturebytes")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("picturename")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("pictureurl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Persons");
                 });
 #pragma warning restore 612, 618
         }

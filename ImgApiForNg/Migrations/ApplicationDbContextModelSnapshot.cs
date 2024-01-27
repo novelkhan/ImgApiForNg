@@ -84,11 +84,11 @@ namespace ImgApiForNg.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("picturebytes")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("picturename")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("picturestring")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("pictureurl")
