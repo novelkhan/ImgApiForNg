@@ -76,23 +76,25 @@ namespace ImgApiForNg.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
+                    b.Property<string>("apiurl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("city")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("clienturl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("filebytes")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("filename")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("picturebytes")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("picturename")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("pictureurl")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");

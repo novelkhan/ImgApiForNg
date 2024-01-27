@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ImgApiForNg.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240127210104_Personmg2")]
-    partial class Personmg2
+    [Migration("20240127234652_Personmg1")]
+    partial class Personmg1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -79,23 +79,25 @@ namespace ImgApiForNg.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
+                    b.Property<string>("apiurl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("city")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("clienturl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("filebytes")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("filename")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("picturebytes")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("picturename")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("pictureurl")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");

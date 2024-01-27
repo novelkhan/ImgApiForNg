@@ -17,8 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
+    <Folder Include="DTOs\Person\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Interfaces\" />
   </ItemGroup>
 
 </Project>

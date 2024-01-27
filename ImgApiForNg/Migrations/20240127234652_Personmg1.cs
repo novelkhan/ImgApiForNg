@@ -39,9 +39,10 @@ namespace ImgApiForNg.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     city = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    picturename = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    picturebytes = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
-                    pictureurl = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    filename = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    filebytes = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    apiurl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    clienturl = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
