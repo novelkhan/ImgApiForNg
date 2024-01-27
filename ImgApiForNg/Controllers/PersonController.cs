@@ -83,7 +83,7 @@ namespace ImgApiForNg.Controllers
         // POST: api/Person
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Person>> PostPerson(Person person)
+        public async Task<ActionResult<Person>> PostPerson(Person person)       //Code is not working
         {
             if (_context.Persons == null)
             {
