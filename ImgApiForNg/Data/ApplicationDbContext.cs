@@ -11,5 +11,6 @@ namespace ImgApiForNg.Data
 
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Person> Persons { get; set; }
+        public DbSet<Man> Men { get; set; }
     }
 }
