@@ -40,7 +40,7 @@ namespace ImgApiForNg.Controllers
         // POST: api/Person
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<AddPersonDTO>> PostPerson(AddPersonDTO addPersonDTO)       //Code is not working
+        public async Task<ActionResult<AddPersonDTO>> PostPerson([FromForm]AddPersonDTO addPersonDTO)       //Code is not working
         {
             var locatedID = await _personRepository.Save(addPersonDTO);
 
