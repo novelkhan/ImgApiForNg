@@ -1,4 +1,6 @@
 using ImgApiForNg.Data;
+using ImgApiForNg.Interfaces;
+using ImgApiForNg.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +32,7 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 //builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
