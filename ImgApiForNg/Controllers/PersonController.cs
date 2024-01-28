@@ -1,4 +1,6 @@
 ﻿using ImgApiForNg.Data;
+using ImgApiForNg.DTOs.Person;
+using ImgApiForNg.Interfaces;
 using ImgApiForNg.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +16,12 @@ namespace ImgApiForNg.Controllers
     public class PersonController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IPersonRepository _personRepository;
 
-        public PersonController(ApplicationDbContext context)
+        public PersonController(IPersonRepository personRepository ,ApplicationDbContext context)
         {
             _context = context;
+            _personRepository = personRepository;
         }
 
         // GET: api/Person
@@ -30,6 +34,28 @@ namespace ImgApiForNg.Controllers
             }
             return await _context.Persons.ToListAsync();
         }
+
+
+
+        // POST: api/Person
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<AddPersonDTO>> PostPerson(AddPersonDTO addPersonDTO)       //Code is not working
+        {
+            var locatedID = await _personRepository.Save(addPersonDTO);
+
+            if (locatedID != 0)
+            {
+                return CreatedAtAction("GetPerson", new { id = locatedID }, addPersonDTO);
+            }
+            else
+            {
+                //return Problem("Entity set 'ApplicationDbContext.Persons'  is null.");
+                return Problem("Entity set 'ApplicationDbContext.Persons'  is null.");
+            }
+        }
+
+
 
         // GET: api/Person/5
         [HttpGet("{id}")]
@@ -80,20 +106,7 @@ namespace ImgApiForNg.Controllers
             return NoContent();
         }
 
-        // POST: api/Person
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Person>> PostPerson(Person person)       //Code is not working
-        {
-            if (_context.Persons == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Persons'  is null.");
-            }
-            _context.Persons.Add(person);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPerson", new { id = person.id }, person);
-        }
+        
 
         // DELETE: api/Person/5
         [HttpDelete("{id}")]
