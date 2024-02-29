@@ -5,7 +5,7 @@
 namespace ImgApiForNg.Migrations
 {
     /// <inheritdoc />
-    public partial class Personmg1 : Migration
+    public partial class conType : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,6 +32,20 @@ namespace ImgApiForNg.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Men",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    imagebytes = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Men", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Persons",
                 columns: table => new
                 {
@@ -40,6 +54,7 @@ namespace ImgApiForNg.Migrations
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     city = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     filename = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    filetype = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     filebytes = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
                     apiurl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     clienturl = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -55,6 +70,9 @@ namespace ImgApiForNg.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Employees");
+
+            migrationBuilder.DropTable(
+                name: "Men");
 
             migrationBuilder.DropTable(
                 name: "Persons");

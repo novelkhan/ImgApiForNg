@@ -40,6 +40,7 @@ namespace ImgApiForNg.Repositories
                     name = addPersonDTO.name,
                     city = addPersonDTO.city,
                     filename = addPersonDTO.file.FileName,
+                    filetype = addPersonDTO.file.ContentType,
                     filebytes = IFormFileToBytesArray(addPersonDTO.file),
                     apiurl = "Not Implemented",
                     clienturl = "Not Implemented"

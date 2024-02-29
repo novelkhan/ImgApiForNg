@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ImgApiForNg.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240128025231_Men1")]
-    partial class Men1
+    [Migration("20240229212334_conType")]
+    partial class conType
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -113,6 +113,10 @@ namespace ImgApiForNg.Migrations
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("filename")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("filetype")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
