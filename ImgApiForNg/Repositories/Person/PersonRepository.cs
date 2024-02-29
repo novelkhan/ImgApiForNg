@@ -8,6 +8,9 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using ImgApiForNg.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 
 namespace ImgApiForNg.Repositories
 {
@@ -72,6 +75,13 @@ namespace ImgApiForNg.Repositories
 
 
 
+
+
+
+
+
+
+
         public static byte[] IFormFileToBytesArray(IFormFile ImageIFormFile)
         {
             var ms = new MemoryStream();
@@ -87,6 +97,17 @@ namespace ImgApiForNg.Repositories
             var stream = new MemoryStream(BytesPhoto);
             IFormFile ImageIFormFile = new FormFile(stream, 0, (BytesPhoto).Length, "name", filename);
             return ImageIFormFile;
+        }
+
+        public static MemoryStream BytesArrayToIFormFileMemoryStream(byte[] BytesPhoto, string filename = "FileName")
+        {
+            var stream = new MemoryStream(BytesPhoto);
+            IFormFile ImageIFormFile = new FormFile(stream, 0, (BytesPhoto).Length, "name", filename);
+            var memoryStream = new MemoryStream();
+            ImageIFormFile.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            return memoryStream;
         }
     }
 }

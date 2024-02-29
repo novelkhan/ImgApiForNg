@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -75,6 +76,26 @@ namespace ImgApiForNg.Controllers
             return person;
         }
 
+
+
+
+        [HttpGet("file/{id}")]
+        public async Task<ActionResult> GetFileAsync(int id)
+        {
+            var person = await _context.Persons.Where(n => n.id == id).FirstOrDefaultAsync();
+            
+            if (person != null)
+            {
+                var contentType = "APPLICATION/octet-stream";
+                MemoryStream memoryStream = BytesArrayToIFormFileMemoryStream(person.filebytes, person.filename);
+                return File(memoryStream, contentType, person.filename);
+            }
+
+            return NotFound();
+        }
+
+
+
         // PUT: api/Person/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
@@ -131,6 +152,17 @@ namespace ImgApiForNg.Controllers
         private bool PersonExists(int id)
         {
             return (_context.Persons?.Any(e => e.id == id)).GetValueOrDefault();
+        }
+
+        public static MemoryStream BytesArrayToIFormFileMemoryStream(byte[] BytesPhoto, string filename = "FileName")
+        {
+            var stream = new MemoryStream(BytesPhoto);
+            IFormFile ImageIFormFile = new FormFile(stream, 0, (BytesPhoto).Length, "name", filename);
+            var memoryStream = new MemoryStream();
+            ImageIFormFile.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            return memoryStream;
         }
     }
 }
