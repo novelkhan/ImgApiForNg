@@ -86,9 +86,11 @@ namespace ImgApiForNg.Controllers
             
             if (person != null)
             {
-                var contentType = "APPLICATION/octet-stream";
-                MemoryStream memoryStream = BytesArrayToIFormFileMemoryStream(person.filebytes, person.filename);
-                return File(memoryStream, contentType, person.filename);
+                //var contentType = "APPLICATION/octet-stream";
+                //MemoryStream memoryStream = BytesArrayToIFormFileMemoryStream(person.filebytes, person.filename);
+                var memoryStream = new MemoryStream(person.filebytes);
+                memoryStream.Position = 0;
+                return File(memoryStream, person.filetype, person.filename);
             }
 
             return NotFound();
