@@ -12,8 +12,8 @@ namespace ImgApiForNg.Models
         public string city { get; set; }
         public string filename { get; set; }
         public string filetype { get; set; }
+        public string? filesize { get; set; }
         public byte[]? filebytes { get; set; }
         public string? apiurl { get; set; }
-        public string? clienturl { get; set; }
     }
 }

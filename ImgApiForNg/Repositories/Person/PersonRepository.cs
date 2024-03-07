@@ -35,6 +35,16 @@ namespace ImgApiForNg.Repositories
 
             if (addPersonDTO.file.Length > 0)
             {
+                var size = addPersonDTO.file.Length;
+                var sizeString = "";
+                if ((size/1024) < (1048576))
+                {
+                    sizeString = size/1024 + " KB";
+                }
+                else
+                {
+                    sizeString = size / 1048576 + " MB";
+                }
                 Person person = new Person()
                 {
                     name = addPersonDTO.name,
@@ -43,7 +53,7 @@ namespace ImgApiForNg.Repositories
                     filetype = addPersonDTO.file.ContentType,
                     filebytes = IFormFileToBytesArray(addPersonDTO.file),
                     apiurl = "Not Implemented",
-                    clienturl = "Not Implemented"
+                    filesize = sizeString
                 };
 
 
