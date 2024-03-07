@@ -37,13 +37,13 @@ namespace ImgApiForNg.Repositories
             {
                 var size = addPersonDTO.file.Length;
                 var sizeString = "";
-                if ((size/1024) < (1048576))
+                if ((size/1024) < (1024))
                 {
-                    sizeString = size/1024 + " KB";
+                    sizeString = (float)(size/1024) + " KB(s)";
                 }
                 else
                 {
-                    sizeString = size / 1048576 + " MB";
+                    sizeString = (float)(size/1048576) + " MB(s)";
                 }
                 Person person = new Person()
                 {
