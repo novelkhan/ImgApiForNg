@@ -11,6 +11,7 @@ using ImgApiForNg.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.CodeAnalysis.Elfie.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace ImgApiForNg.Repositories
 {
@@ -41,13 +42,15 @@ namespace ImgApiForNg.Repositories
                 {
                     //sizeString = (float)(size/1024) + " KB(s)";
                     float length = (float)size / 1024;
-                    sizeString = (float)length + " KB(s)";
+                    //sizeString = (float)length + " KB(s)";
+                    sizeString = (float)System.Math.Round(length, 2) + " KB(s)";
                 }
                 else
                 {
                     //sizeString = (float)(size / 1048576) + " MB(s)";
                     float length = (float)size / 1048576;
-                    sizeString = (float)length + " MB(s)";
+                    //sizeString = (float)length + " MB(s)";
+                    sizeString = (float)System.Math.Round(length, 2) + " MB(s)";
                 }
                 Person person = new Person()
                 {
