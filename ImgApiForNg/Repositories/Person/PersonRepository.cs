@@ -39,11 +39,15 @@ namespace ImgApiForNg.Repositories
                 var sizeString = "";
                 if ((size/1024) < (1024))
                 {
-                    sizeString = (float)(size/1024) + " KB(s)";
+                    //sizeString = (float)(size/1024) + " KB(s)";
+                    float length = (float)size / 1024;
+                    sizeString = (float)length + " KB(s)";
                 }
                 else
                 {
-                    sizeString = (float)(size/1048576) + " MB(s)";
+                    //sizeString = (float)(size / 1048576) + " MB(s)";
+                    float length = (float)size / 1048576;
+                    sizeString = (float)length + " MB(s)";
                 }
                 Person person = new Person()
                 {
