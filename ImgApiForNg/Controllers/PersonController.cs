@@ -101,7 +101,7 @@ namespace ImgApiForNg.Controllers
         // PUT: api/Person/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEmployee(int id, Person person)
+        public async Task<IActionResult> PutPerson(int id, Person person)
         {
             if (id != person.id)
             {
