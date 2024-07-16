@@ -72,7 +72,7 @@ jobs:
     needs: build
     environment:
       name: 'Development'
-      url: https://ng.somee.com/api/person
+      url: http://ng.somee.com/api/person
 
     steps:
       - name: Download artifact from build job
