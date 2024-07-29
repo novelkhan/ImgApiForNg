@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ImgApiForNg.DTOs.Employee;
+using ImgApiForNg.DTOs.Person;
+using System.IO;
 
 namespace ImgApiForNg.Controllers
 {
@@ -83,12 +86,28 @@ namespace ImgApiForNg.Controllers
         // POST: api/Employee
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Employee>> PostEmployee(Employee employee)
+        public async Task<ActionResult<AddEmployeeDTO>> PostEmployee([FromForm]AddEmployeeDTO employeeDto)
         {
             if (_context.Employees == null)
             {
                 return Problem("Entity set 'ApplicationDbContext.Employees'  is null.");
             }
+
+            Employee employee = new Employee()
+            {
+                firstname = employeeDto.firstname,
+                lastname = employeeDto.lastname,
+                birthdate = employeeDto.birthdate,
+                gender = employeeDto.gender,
+                education = employeeDto.education,
+                company = employeeDto.company,
+                jobExperience = int.Parse(employeeDto.jobExperience),
+                salary = int.Parse(employeeDto.salary),
+                filename = employeeDto.profile?.FileName,
+                filetype = employeeDto.profile?.ContentType,
+                filebytes = IFormFileToBytesArray(employeeDto.profile)
+            };
+
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
 
@@ -118,6 +137,15 @@ namespace ImgApiForNg.Controllers
         private bool EmployeeExists(int id)
         {
             return (_context.Employees?.Any(e => e.id == id)).GetValueOrDefault();
+        }
+
+        public static byte[] IFormFileToBytesArray(IFormFile ImageIFormFile)
+        {
+            var ms = new MemoryStream();
+            ImageIFormFile.CopyTo(ms);
+            var BytesPhoto = ms.ToArray();
+
+            return BytesPhoto;
         }
     }
 }

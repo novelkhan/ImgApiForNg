@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace ImgApiForNg.Models
 {
@@ -16,6 +17,9 @@ namespace ImgApiForNg.Models
         public string company { get; set; }
         public int jobExperience { get; set; }
         public int salary { get; set; }
-        public string profile { get; set; }
+
+        public string? filename { get; set; }
+        public string? filetype { get; set; }
+        public byte[]? filebytes { get; set; }
     }
 }
