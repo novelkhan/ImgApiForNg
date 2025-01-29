@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ImgApiForNg.Data;
 using ImgApiForNg.Models;
+using System.IO;
 
 namespace ImgApiForNg.Controllers
 {
@@ -84,16 +85,27 @@ namespace ImgApiForNg.Controllers
         // POST: api/Men
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Man>> PostMan([FromForm]Man man)
+        public async Task<ActionResult<Man>> PostMan([FromBody]Man man)
         {
-          if (_context.Men == null)
-          {
-              return Problem("Entity set 'ApplicationDbContext.Men'  is null.");
-          }
-            _context.Men.Add(man);
+            if (_context.Men == null)
+            {
+                return Problem("Entity set 'ApplicationDbContext.Men'  is null.");
+            }
+
+            var mapedMan = new Man()
+            {
+                name = man.name,
+                filename = man.filename,
+                filetype = man.filetype,
+                filesize = man.filesize,
+                imagebytes = Base64StringToBytesArray(man.base64string),
+                base64string = man.base64string
+            };
+
+            _context.Men.Add(mapedMan);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetMan", new { id = man.id }, man);
+            return CreatedAtAction("GetMan", new { id = mapedMan.id }, mapedMan);
         }
 
         // DELETE: api/Men/5
@@ -119,6 +131,24 @@ namespace ImgApiForNg.Controllers
         private bool ManExists(int id)
         {
             return (_context.Men?.Any(e => e.id == id)).GetValueOrDefault();
+        }
+
+
+
+
+        public static byte[] Base64StringToBytesArray(String base64String)
+        {
+            var fileBytes = Convert.FromBase64String(base64String);
+
+            return fileBytes;
+        }
+        
+        public static string BytesArrayToBase64String(byte[] bytesArray)
+        {
+            // Byte array (bytesArray) থেকে Base64 String তৈরি
+            string base64String = Convert.ToBase64String(bytesArray);
+
+            return base64String;
         }
     }
 }
