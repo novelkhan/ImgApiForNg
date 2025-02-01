@@ -2,6 +2,7 @@ using ImgApiForNg.Data;
 using ImgApiForNg.Interfaces;
 using ImgApiForNg.Repositories;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,8 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 //builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.WebHost.UseWebRoot("wwwroot");
 
 
 var app = builder.Build();
