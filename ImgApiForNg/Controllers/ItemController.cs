@@ -58,12 +58,12 @@ namespace ImgApiForNg.Controllers
 
         // GET: api/Item/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Item>> GetItem(int id)
+        public async Task<ActionResult<ItemDTO>> GetItem(int id)
         {
-          if (_context.Items == null)
-          {
-              return NotFound();
-          }
+            if (_context.Items == null)
+            {
+                return NotFound();
+            }
             var item = await _context.Items.FindAsync(id);
 
             if (item == null)
@@ -71,20 +71,46 @@ namespace ImgApiForNg.Controllers
                 return NotFound();
             }
 
-            return item;
+            var itemToPass = new ItemDTO()
+            {
+                id = item.id,
+                filename = item.fileName,
+                filetype = item.fileType,
+                filesize = item.fileSize,
+                filestring = await GetFileBase64StringFromLocalFolderAsync(item.fileUrl)
+            };
+
+
+            return itemToPass;
         }
 
         // PUT: api/Item/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutItem(int id, Item item)
+        public async Task<IActionResult> PutItem(int id, [FromBody] ItemDTO itemDto)
         {
-            if (id != item.id)
+            if (id != itemDto.id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(item).State = EntityState.Modified;
+            var existingItem = await _context.Items.FindAsync(id);
+            if (existingItem == null)
+            {
+                return NotFound();
+            }
+
+            existingItem.fileName = itemDto.filename;
+            existingItem.fileType = itemDto.filetype;
+            existingItem.fileSize = itemDto.filesize;
+
+            if (!string.IsNullOrEmpty(itemDto.filestring))
+            {
+                // Remove the old file if a new one is provided
+                await RemoveFileFromLocalFolderAsync(existingItem.fileUrl);
+                existingItem.fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename));
+            }
+
+            _context.Entry(existingItem).State = EntityState.Modified;
 
             try
             {
