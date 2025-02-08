@@ -84,6 +84,55 @@ namespace ImgApiForNg.Controllers
             return itemToPass;
         }
 
+        //// PUT: api/Item/5
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutItem(int id, [FromBody] ItemDTO itemDto)
+        //{
+        //    if (id != itemDto.id)
+        //    {
+        //        return BadRequest();
+        //    }
+
+        //    var existingItem = await _context.Items.FindAsync(id);
+        //    if (existingItem == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    existingItem.fileName = itemDto.filename;
+        //    existingItem.fileType = itemDto.filetype;
+        //    existingItem.fileSize = itemDto.filesize;
+
+        //    if (!string.IsNullOrEmpty(itemDto.filestring))
+        //    {
+        //        // Remove the old file if a new one is provided
+        //        await RemoveFileFromLocalFolderAsync(existingItem.fileUrl);
+        //        existingItem.fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename));
+        //    }
+
+        //    _context.Entry(existingItem).State = EntityState.Modified;
+
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!ItemExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
+
+
+
         // PUT: api/Item/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutItem(int id, [FromBody] ItemDTO itemDto)
@@ -105,9 +154,11 @@ namespace ImgApiForNg.Controllers
 
             if (!string.IsNullOrEmpty(itemDto.filestring))
             {
-                // Remove the old file if a new one is provided
-                await RemoveFileFromLocalFolderAsync(existingItem.fileUrl);
-                existingItem.fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename));
+                // Update the file directly without deleting the old one
+                existingItem.fileUrl = await UpdateFileInLocalFolderAsync(
+                    Base64StringToIFormFile(itemDto.filestring, itemDto.filename),
+                    existingItem.fileUrl
+                );
             }
 
             _context.Entry(existingItem).State = EntityState.Modified;
@@ -130,6 +181,9 @@ namespace ImgApiForNg.Controllers
 
             return NoContent();
         }
+
+
+
 
         // POST: api/Item
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -215,6 +269,31 @@ namespace ImgApiForNg.Controllers
 
             return fileUrl;
         }
+
+
+
+        private async Task<string> UpdateFileInLocalFolderAsync(IFormFile file, string existingFilePath)
+        {
+            // Combine the web root path with the existing file path
+            string serverFilePath = Path.Combine(_webHostEnvironment.WebRootPath, existingFilePath.TrimStart('/'));
+
+            // Ensure the directory exists
+            string directoryPath = Path.GetDirectoryName(serverFilePath);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            // Overwrite the existing file with the new file
+            using (var fileStream = new FileStream(serverFilePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            return existingFilePath; // Return the same file path
+        }
+
+
 
 
         private async Task<string> GetFileBase64StringFromLocalFolderAsync(string fileUrl)
