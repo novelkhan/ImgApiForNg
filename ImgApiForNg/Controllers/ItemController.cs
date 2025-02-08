@@ -26,6 +26,59 @@ namespace ImgApiForNg.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+
+
+        // Generate Download Link
+        [HttpPost("generate-download-link/{id}")]
+        public async Task<IActionResult> GenerateDownloadLink(int id)
+        {
+            var item = await _context.Items.FindAsync(id);
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            // Generate a unique token (e.g., GUID)
+            var token = Guid.NewGuid().ToString();
+
+            // Set expiration time (8 hours from now)
+            var expirationTime = DateTime.UtcNow.AddHours(8);
+
+            // Save the token and expiration time in the database
+            item.DownloadToken = token;
+            item.DownloadTokenExpiration = expirationTime;
+            _context.Entry(item).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            // Generate the download link
+            var downloadLink = $"{Request.Scheme}://{Request.Host}/api/item/download/{token}";
+
+            return Ok(new { downloadLink });
+        }
+
+        // Download File using Token
+        [HttpGet("download/{token}")]
+        public async Task<IActionResult> DownloadFile(string token)
+        {
+            var item = await _context.Items.FirstOrDefaultAsync(i => i.DownloadToken == token);
+            if (item == null || item.DownloadTokenExpiration < DateTime.UtcNow)
+            {
+                return NotFound("Download link is invalid or expired.");
+            }
+
+            // Serve the file for download
+            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, item.fileUrl.TrimStart('/'));
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("File not found.");
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            return File(fileBytes, "application/octet-stream", item.fileName);
+        }
+
+
+
         // GET: api/Item
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemDTO>>> GetItems()
