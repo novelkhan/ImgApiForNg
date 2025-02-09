@@ -39,26 +39,27 @@ namespace ImgApiForNg.Controllers
                 return NotFound();
             }
 
-            // Generate a unique token (e.g., GUID)
+            // Generate a unique token
             var token = Guid.NewGuid().ToString();
 
-            // URL encode the file name
-            var encodedFileName = HttpUtility.UrlEncode(item.fileName);
+            // Encode file name properly (space -> %20, not +)
+            var encodedFileName = Uri.EscapeDataString(item.fileName);
 
-            // Set expiration time (8 hours from now)
+            // Set expiration time (8 hours)
             var expirationTime = DateTime.UtcNow.AddHours(8);
 
-            // Save the token and expiration time in the database
+            // Save token in DB
             item.DownloadToken = token;
             item.DownloadTokenExpiration = expirationTime;
             _context.Entry(item).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            // Generate the download link with token and file name
+            // Generate download link
             var downloadLink = $"{Request.Scheme}://{Request.Host}/api/item/download/{token}/{encodedFileName}";
 
             return Ok(new { downloadLink });
         }
+
 
 
 
