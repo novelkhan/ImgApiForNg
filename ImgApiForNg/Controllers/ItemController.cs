@@ -49,7 +49,7 @@ namespace ImgApiForNg.Controllers
             var expirationTime = DateTime.UtcNow.AddHours(8);
 
             // Save the token and expiration time in the database
-            item.DownloadToken = token; // Save only the token
+            item.DownloadToken = token;
             item.DownloadTokenExpiration = expirationTime;
             _context.Entry(item).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -61,18 +61,12 @@ namespace ImgApiForNg.Controllers
         }
 
 
-        [HttpGet("download/{tokenWithFileName}")]
-        public async Task<IActionResult> DownloadFile(string tokenWithFileName)
-        {
-            // Split the token and file name
-            var parts = tokenWithFileName.Split('/');
-            if (parts.Length != 2)
-            {
-                return NotFound("Invalid download link.");
-            }
 
-            var token = parts[0]; // Extract the token
-            var encodedFileName = parts[1]; // Extract the encoded file name
+        [HttpGet("download/{token}/{encodedFileName}")]
+        public async Task<IActionResult> DownloadFile(string token, string encodedFileName)
+        {
+            // URL decode the file name
+            var fileName = HttpUtility.UrlDecode(encodedFileName);
 
             // Find the item by token
             var item = await _context.Items.FirstOrDefaultAsync(i => i.DownloadToken == token);
@@ -81,16 +75,24 @@ namespace ImgApiForNg.Controllers
                 return NotFound("Download link is invalid or expired.");
             }
 
-            // Serve the file for download
+            // Get the file path
             var filePath = Path.Combine(_webHostEnvironment.WebRootPath, item.fileUrl.TrimStart('/'));
+
+            // Debugging: Print values in console
+            Console.WriteLine($"Token: {token}");
+            Console.WriteLine($"Decoded File Name: {fileName}");
+            Console.WriteLine($"File Path: {filePath}");
+
+            // Check if the file exists
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound("File not found.");
             }
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-            return File(fileBytes, item.fileType, item.fileName);
+            return File(fileBytes, item.fileType, fileName);
         }
+
 
 
 
