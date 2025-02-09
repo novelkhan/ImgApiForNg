@@ -222,6 +222,8 @@ namespace ImgApiForNg.Controllers
             existingItem.fileName = itemDto.filename;
             existingItem.fileType = itemDto.filetype;
             existingItem.fileSize = itemDto.filesize;
+            existingItem.DownloadToken = string.Empty; // Set default value
+            existingItem.DownloadTokenExpiration = null; // Set default value
 
             if (!string.IsNullOrEmpty(itemDto.filestring))
             {
@@ -317,39 +319,12 @@ namespace ImgApiForNg.Controllers
 
 
 
-        //private async Task<string> SaveFileToLocalFolderAsync(IFormFile file, string location = "image/imag/")
-        //{
-        //    string fileUrl;
-
-        //    string folder = location;
-        //    folder += Guid.NewGuid().ToString() + "_" + file.FileName;
-        //    string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
-
-        //    fileUrl = "/" + folder;
-
-        //    // Ensure the directory exists
-        //    string directoryPath = Path.GetDirectoryName(serverFolder);
-        //    if (!Directory.Exists(directoryPath))
-        //    {
-        //        Directory.CreateDirectory(directoryPath);
-        //    }
-
-        //    // Use a using statement to ensure the file stream is disposed of properly
-        //    using (var fileStream = new FileStream(serverFolder, FileMode.Create))
-        //    {
-        //        await file.CopyToAsync(fileStream);
-        //    }
-
-        //    return fileUrl;
-        //}
-
-
         private async Task<string> SaveFileToLocalFolderAsync(IFormFile file, string location = "image/imag/")
         {
             string fileUrl;
 
             string folder = location;
-            folder += file.FileName; // Use the original file name instead of GUID
+            folder += Guid.NewGuid().ToString() + "_" + file.FileName;
             string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
 
             fileUrl = "/" + folder;
@@ -369,6 +344,33 @@ namespace ImgApiForNg.Controllers
 
             return fileUrl;
         }
+
+
+        //private async Task<string> SaveFileToLocalFolderAsync(IFormFile file, string location = "image/imag/")
+        //{
+        //    string fileUrl;
+
+        //    string folder = location;
+        //    folder += file.FileName; // Use the original file name instead of GUID
+        //    string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
+
+        //    fileUrl = "/" + folder;
+
+        //    // Ensure the directory exists
+        //    string directoryPath = Path.GetDirectoryName(serverFolder);
+        //    if (!Directory.Exists(directoryPath))
+        //    {
+        //        Directory.CreateDirectory(directoryPath);
+        //    }
+
+        //    // Use a using statement to ensure the file stream is disposed of properly
+        //    using (var fileStream = new FileStream(serverFolder, FileMode.Create))
+        //    {
+        //        await file.CopyToAsync(fileStream);
+        //    }
+
+        //    return fileUrl;
+        //}
 
 
 
