@@ -10,6 +10,8 @@ using ImgApiForNg.Models;
 using ImgApiForNg.DTOs.Item;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using Azure.Core;
+using System.Web;
 
 namespace ImgApiForNg.Controllers
 {
@@ -28,7 +30,6 @@ namespace ImgApiForNg.Controllers
 
 
 
-        // Generate Download Link
         [HttpPost("generate-download-link/{id}")]
         public async Task<IActionResult> GenerateDownloadLink(int id)
         {
@@ -41,25 +42,39 @@ namespace ImgApiForNg.Controllers
             // Generate a unique token (e.g., GUID)
             var token = Guid.NewGuid().ToString();
 
+            // URL encode the file name
+            var encodedFileName = HttpUtility.UrlEncode(item.fileName);
+
             // Set expiration time (8 hours from now)
             var expirationTime = DateTime.UtcNow.AddHours(8);
 
             // Save the token and expiration time in the database
-            item.DownloadToken = token;
+            item.DownloadToken = token; // Save only the token
             item.DownloadTokenExpiration = expirationTime;
             _context.Entry(item).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            // Generate the download link
-            var downloadLink = $"{Request.Scheme}://{Request.Host}/api/item/download/{token}";
+            // Generate the download link with token and file name
+            var downloadLink = $"{Request.Scheme}://{Request.Host}/api/item/download/{token}/{encodedFileName}";
 
             return Ok(new { downloadLink });
         }
 
-        // Download File using Token
-        [HttpGet("download/{token}")]
-        public async Task<IActionResult> DownloadFile(string token)
+
+        [HttpGet("download/{tokenWithFileName}")]
+        public async Task<IActionResult> DownloadFile(string tokenWithFileName)
         {
+            // Split the token and file name
+            var parts = tokenWithFileName.Split('/');
+            if (parts.Length != 2)
+            {
+                return NotFound("Invalid download link.");
+            }
+
+            var token = parts[0]; // Extract the token
+            var encodedFileName = parts[1]; // Extract the encoded file name
+
+            // Find the item by token
             var item = await _context.Items.FirstOrDefaultAsync(i => i.DownloadToken == token);
             if (item == null || item.DownloadTokenExpiration < DateTime.UtcNow)
             {
@@ -74,7 +89,7 @@ namespace ImgApiForNg.Controllers
             }
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-            return File(fileBytes, "application/octet-stream", item.fileName);
+            return File(fileBytes, item.fileType, item.fileName);
         }
 
 
@@ -252,7 +267,9 @@ namespace ImgApiForNg.Controllers
                 fileName = itemDto.filename,
                 fileType = itemDto.filetype,
                 fileSize = itemDto.filesize,
-                fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename))
+                fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename)),
+                DownloadToken = string.Empty, // Set default value
+                DownloadTokenExpiration = null // Set default value
             };
             _context.Items.Add(item);
             await _context.SaveChangesAsync();
@@ -297,12 +314,39 @@ namespace ImgApiForNg.Controllers
 
 
 
+        //private async Task<string> SaveFileToLocalFolderAsync(IFormFile file, string location = "image/imag/")
+        //{
+        //    string fileUrl;
+
+        //    string folder = location;
+        //    folder += Guid.NewGuid().ToString() + "_" + file.FileName;
+        //    string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
+
+        //    fileUrl = "/" + folder;
+
+        //    // Ensure the directory exists
+        //    string directoryPath = Path.GetDirectoryName(serverFolder);
+        //    if (!Directory.Exists(directoryPath))
+        //    {
+        //        Directory.CreateDirectory(directoryPath);
+        //    }
+
+        //    // Use a using statement to ensure the file stream is disposed of properly
+        //    using (var fileStream = new FileStream(serverFolder, FileMode.Create))
+        //    {
+        //        await file.CopyToAsync(fileStream);
+        //    }
+
+        //    return fileUrl;
+        //}
+
+
         private async Task<string> SaveFileToLocalFolderAsync(IFormFile file, string location = "image/imag/")
         {
             string fileUrl;
 
             string folder = location;
-            folder += Guid.NewGuid().ToString() + "_" + file.FileName;
+            folder += file.FileName; // Use the original file name instead of GUID
             string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
 
             fileUrl = "/" + folder;

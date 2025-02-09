@@ -16,7 +16,7 @@ namespace ImgApiForNg.Models
         public string fileUrl { get; set; }
 
         // Add these two properties for download link functionality
-        public string DownloadToken { get; set; }
-        public DateTime? DownloadTokenExpiration { get; set; }
+        public string DownloadToken { get; set; } = string.Empty; // Default to empty string
+        public DateTime? DownloadTokenExpiration { get; set; } = null; // Default to null
     }
 }
