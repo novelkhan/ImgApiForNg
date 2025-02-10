@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using Azure.Core;
 using System.Web;
+using System.Net.Http;
 
 namespace ImgApiForNg.Controllers
 {
@@ -516,6 +517,104 @@ namespace ImgApiForNg.Controllers
             }
 
             return sizeString;
+        }
+
+
+        public static string GetFileSizeString(long len)
+        {
+            long size = len; // File size in bytes
+            string sizeString;
+
+            if (size < 1024 * 1024) // Less than 1 MB
+            {
+                double length = size / 1024.0; // Convert to KB
+                string unit = length <= 1 ? "KB" : "KBs"; // Check if size is <= 1 KB
+                sizeString = $"{Math.Round(length, 2)} {unit}";
+            }
+            else // 1 MB or more
+            {
+                double length = size / (1024.0 * 1024.0); // Convert to MB
+                string unit = length <= 1 ? "MB" : "MBs"; // Check if size is <= 1 MB
+                sizeString = $"{Math.Round(length, 2)} {unit}";
+            }
+
+            return sizeString;
+        }
+
+
+
+
+
+        [HttpPost("upload-from-url")]
+        public async Task<IActionResult> UploadFromUrl([FromBody] UploadFromUrlRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Url))
+            {
+                return BadRequest("URL is required.");
+            }
+
+            try
+            {
+                // Download the file from the provided URL
+                using (var httpClient = new HttpClient())
+                {
+                    var response = await httpClient.GetAsync(request.Url);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return BadRequest("Failed to download file from the provided URL.");
+                    }
+
+                    var fileBytes = await response.Content.ReadAsByteArrayAsync();
+                    var fileName = Path.GetFileName(new Uri(request.Url).LocalPath);
+                    var fileType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+
+                    // Save the file to the local folder
+                    var fileUrl = await SaveFileToLocalFolderAsync(fileBytes, fileName);
+
+                    // Save the file information to the database
+                    var item = new Item
+                    {
+                        fileName = fileName,
+                        fileType = fileType,
+                        fileSize = GetFileSizeString(fileBytes.Length),
+                        fileUrl = fileUrl,
+                        DownloadToken = string.Empty, // Set default value
+                        DownloadTokenExpiration = null // Set default value
+                    };
+
+                    _context.Items.Add(item);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { item.id });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        private async Task<string> SaveFileToLocalFolderAsync(byte[] fileBytes, string fileName, string location = "image/imag/")
+        {
+            string fileUrl;
+
+            string folder = location;
+            folder += Guid.NewGuid().ToString() + "_" + fileName;
+            string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
+
+            fileUrl = "/" + folder;
+
+            // Ensure the directory exists
+            string directoryPath = Path.GetDirectoryName(serverFolder);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            // Save the file to the server
+            await System.IO.File.WriteAllBytesAsync(serverFolder, fileBytes);
+
+            return fileUrl;
         }
     }
 }
