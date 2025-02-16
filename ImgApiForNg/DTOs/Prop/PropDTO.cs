@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace ImgApiForNg.DTOs.Prop
 {
@@ -11,6 +12,6 @@ namespace ImgApiForNg.DTOs.Prop
         public string filename { get; set; }
         public string filetype { get; set; }
         public string filesize { get; set; }
-        public byte[] filedata { get; set; }
+        public List<byte> filedata { get; set; }
     }
 }

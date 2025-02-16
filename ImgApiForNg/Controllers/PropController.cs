@@ -121,7 +121,7 @@ namespace ImgApiForNg.Controllers
                     filename = prop.fileName,
                     filetype = prop.fileType,
                     filesize = prop.fileSize,
-                    filedata = propByteArray
+                    filedata = propByteArray.ToList()
                 });
             }
 
@@ -149,7 +149,7 @@ namespace ImgApiForNg.Controllers
                 filename = prop.fileName,
                 filetype = prop.fileType,
                 filesize = prop.fileSize,
-                filedata = await GetFileByteArrayFromLocalFolderAsync(prop.fileUrl)
+                filedata = (await GetFileByteArrayFromLocalFolderAsync(prop.fileUrl)).ToList()
             };
 
 
@@ -179,11 +179,11 @@ namespace ImgApiForNg.Controllers
             existingProp.DownloadToken = string.Empty; // Set default value
             existingProp.DownloadTokenExpiration = null; // Set default value
 
-            if (propDto.filedata != null && propDto.filedata.Length > 0)
+            if (propDto.filedata != null && propDto.filedata.ToArray().Length > 0)
             {
                 // Update the file directly without deleting the old one
                 existingProp.fileUrl = await UpdateFileInLocalFolderAsync(
-                    BytesArrayToIFormFile(propDto.filedata, propDto.filename),
+                    BytesArrayToIFormFile(propDto.filedata.ToArray(), propDto.filename),
                     existingProp.fileUrl
                 );
             }
@@ -227,7 +227,7 @@ namespace ImgApiForNg.Controllers
                 fileName = propDto.filename,
                 fileType = propDto.filetype,
                 fileSize = propDto.filesize,
-                fileUrl = await SaveFileToLocalFolderAsync(BytesArrayToIFormFile(propDto.filedata, propDto.filename)),
+                fileUrl = await SaveFileToLocalFolderAsync(BytesArrayToIFormFile(propDto.filedata.ToArray(), propDto.filename)),
                 DownloadToken = string.Empty,
                 DownloadTokenExpiration = null
             };
