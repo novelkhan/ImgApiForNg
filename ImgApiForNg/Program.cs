@@ -3,6 +3,7 @@ using ImgApiForNg.Interfaces;
 using ImgApiForNg.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,8 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddSwaggerGen();
 
 builder.WebHost.UseWebRoot("wwwroot");
+builder.Services.AddSignalR();
+
 
 
 var app = builder.Build();
@@ -60,5 +63,7 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ImgApiForNg.Hubs.UploadProgressHub>("/uploadProgressHub");
+
 
 app.Run();

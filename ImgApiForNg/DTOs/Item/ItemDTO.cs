@@ -13,5 +13,7 @@ namespace ImgApiForNg.DTOs.Item
         public string filetype { get; set; }
         public string filesize { get; set; }
         public string filestring { get; set; }
+
+        public string? connectionId { get; set; }
     }
 }

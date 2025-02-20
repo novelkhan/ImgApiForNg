@@ -13,6 +13,8 @@ using System.IO;
 using Azure.Core;
 using System.Web;
 using System.Net.Http;
+using Microsoft.AspNetCore.SignalR;
+using ImgApiForNg.Hubs;
 
 namespace ImgApiForNg.Controllers
 {
@@ -22,11 +24,13 @@ namespace ImgApiForNg.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IHubContext<UploadProgressHub> _hubContext;
 
-        public ItemController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ItemController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, IHubContext<UploadProgressHub> hubContext)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _hubContext = hubContext;
         }
 
 
@@ -273,7 +277,7 @@ namespace ImgApiForNg.Controllers
                 fileName = itemDto.filename,
                 fileType = itemDto.filetype,
                 fileSize = itemDto.filesize,
-                fileUrl = await SaveFileToLocalFolderAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename)),
+                fileUrl = await SaveFileToLocalFolderWithProgressAsync(Base64StringToIFormFile(itemDto.filestring, itemDto.filename), itemDto.connectionId),
                 DownloadToken = string.Empty, // Set default value
                 DownloadTokenExpiration = null // Set default value
             };
@@ -555,37 +559,68 @@ namespace ImgApiForNg.Controllers
 
             try
             {
-                // Download the file from the provided URL
                 using (var httpClient = new HttpClient())
                 {
-                    var response = await httpClient.GetAsync(request.Url);
-                    if (!response.IsSuccessStatusCode)
+                    // Initiate request with ResponseHeadersRead to allow streaming
+                    using (var response = await httpClient.GetAsync(request.Url, HttpCompletionOption.ResponseHeadersRead))
                     {
-                        return BadRequest("Failed to download file from the provided URL.");
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            return BadRequest("Failed to download file from the provided URL.");
+                        }
+
+                        var totalBytes = response.Content.Headers.ContentLength ?? -1L; // Total size of file
+                        var fileName = Path.GetFileName(new Uri(request.Url).LocalPath);
+                        var fileType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+
+                        using (var contentStream = await response.Content.ReadAsStreamAsync())
+                        {
+                            using (var memoryStream = new MemoryStream())
+                            {
+                                var buffer = new byte[81920]; // 80KB chunks
+                                int bytesRead;
+                                long totalRead = 0;
+
+                                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                                {
+                                    await memoryStream.WriteAsync(buffer, 0, bytesRead);
+                                    totalRead += bytesRead;
+
+                                    // Calculate download progress percentage
+                                    int progress = totalBytes > 0 ? (int)((totalRead * 100) / totalBytes) : -1;
+
+                                    // Log progress (for debugging)
+                                    Console.WriteLine($"Download From Url Progress: {progress}%");
+
+                                    // Send progress update to client via SignalR
+                                    if (request.ConnectionId != null)
+                                    {
+                                        //await _hubContext.Clients.Client(request.ConnectionId).SendAsync("ReceiveProgress", progress);
+                                        await _hubContext.Clients.Client(request.ConnectionId).SendAsync("SendProgress", request.ConnectionId, progress, "download");
+                                    }
+                                }
+
+                                var fileBytes = memoryStream.ToArray();
+                                var fileUrl = await SaveFileToLocalFolderWithProgressAsync(fileBytes, fileName, request.ConnectionId);
+
+                                // Save the file information to the database
+                                var item = new Item
+                                {
+                                    fileName = fileName,
+                                    fileType = fileType,
+                                    fileSize = GetFileSizeString(fileBytes.Length),
+                                    fileUrl = fileUrl,
+                                    DownloadToken = string.Empty, // Set default value
+                                    DownloadTokenExpiration = null // Set default value
+                                };
+
+                                _context.Items.Add(item);
+                                await _context.SaveChangesAsync();
+
+                                return Ok(new { item.id });
+                            }
+                        }
                     }
-
-                    var fileBytes = await response.Content.ReadAsByteArrayAsync();
-                    var fileName = Path.GetFileName(new Uri(request.Url).LocalPath);
-                    var fileType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
-
-                    // Save the file to the local folder
-                    var fileUrl = await SaveFileToLocalFolderAsync(fileBytes, fileName);
-
-                    // Save the file information to the database
-                    var item = new Item
-                    {
-                        fileName = fileName,
-                        fileType = fileType,
-                        fileSize = GetFileSizeString(fileBytes.Length),
-                        fileUrl = fileUrl,
-                        DownloadToken = string.Empty, // Set default value
-                        DownloadTokenExpiration = null // Set default value
-                    };
-
-                    _context.Items.Add(item);
-                    await _context.SaveChangesAsync();
-
-                    return Ok(new { item.id });
                 }
             }
             catch (Exception ex)
@@ -593,6 +628,7 @@ namespace ImgApiForNg.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
         private async Task<string> SaveFileToLocalFolderAsync(byte[] fileBytes, string fileName, string location = "image/imag/")
         {
@@ -616,5 +652,97 @@ namespace ImgApiForNg.Controllers
 
             return fileUrl;
         }
+
+
+        private async Task<string> SaveFileToLocalFolderWithProgressAsync(byte[] fileBytes, string fileName, string connectionId, string location = "image/imag/")
+        {
+            string fileUrl;
+            string folder = location + Guid.NewGuid().ToString() + "_" + fileName;
+            string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
+            fileUrl = "/" + folder;
+
+            // Ensure the directory exists
+            string directoryPath = Path.GetDirectoryName(serverFolder);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            long totalBytes = fileBytes.Length;
+            long totalWritten = 0;
+            int bufferSize = 81920; // 80KB chunks
+
+            using (var fileStream = new FileStream(serverFolder, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, true))
+            {
+                using (var memoryStream = new MemoryStream(fileBytes))
+                {
+                    var buffer = new byte[bufferSize];
+                    int bytesRead;
+                    while ((bytesRead = await memoryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fileStream.WriteAsync(buffer, 0, bytesRead);
+                        totalWritten += bytesRead;
+
+                        // Calculate Progress
+                        int progress = (int)((totalWritten * 100) / totalBytes);
+                        Console.WriteLine($"Upload To The Database Progress: {progress}%");
+
+                        // Send progress update to client via SignalR
+                        //await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveProgress", progress);
+                        await _hubContext.Clients.Client(connectionId).SendAsync("SendProgress", connectionId, progress, "upload");
+                    }
+                }
+            }
+
+            return fileUrl;
+        }
+
+        private async Task<string> SaveFileToLocalFolderWithProgressAsync(IFormFile file, string connectionId, string location = "image/imag/")
+        {
+            string fileUrl;
+            string folder = location + Guid.NewGuid().ToString() + "_" + file.FileName;
+            string serverFolder = Path.Combine(_webHostEnvironment.WebRootPath, folder);
+            fileUrl = "/" + folder;
+
+            // Ensure the directory exists
+            string directoryPath = Path.GetDirectoryName(serverFolder);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            long totalBytes = file.Length;
+            long totalWritten = 0;
+            int bufferSize = 81920; // 80KB chunks
+
+            using (var fileStream = new FileStream(serverFolder, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, true))
+            {
+                using (var fileReadStream = file.OpenReadStream()) // Open stream for reading file
+                {
+                    var buffer = new byte[bufferSize];
+                    int bytesRead;
+
+                    while ((bytesRead = await fileReadStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fileStream.WriteAsync(buffer, 0, bytesRead);
+                        totalWritten += bytesRead;
+
+                        // Calculate Progress
+                        int progress = (int)((totalWritten * 100) / totalBytes);
+                        Console.WriteLine($"Upload To The Database Progress: {progress}%");
+
+                        // Send progress update to client via SignalR
+                        if (!string.IsNullOrEmpty(connectionId))
+                        {
+                            //await _hubContext.Clients.Client(connectionId).SendAsync("UploadProgress", progress);
+                            await _hubContext.Clients.Client(connectionId).SendAsync("SendProgress", connectionId, progress, "upload");
+                        }
+                    }
+                }
+            }
+
+            return fileUrl;
+        }
+
     }
 }
