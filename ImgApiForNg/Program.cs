@@ -1,4 +1,4 @@
-using ImgApiForNg.Data;
+﻿using ImgApiForNg.Data;
 using ImgApiForNg.Interfaces;
 using ImgApiForNg.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -57,6 +57,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseWebSockets(); // WebSocket ব্যবহার করুন
 
 app.UseCors();
 
