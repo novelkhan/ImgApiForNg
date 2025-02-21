@@ -595,8 +595,7 @@ namespace ImgApiForNg.Controllers
                                     // Send progress update to client via SignalR
                                     if (request.ConnectionId != null)
                                     {
-                                        //await _hubContext.Clients.Client(request.ConnectionId).SendAsync("ReceiveProgress", progress);
-                                        await _hubContext.Clients.Client(request.ConnectionId).SendAsync("SendProgress", request.ConnectionId, progress, "download");
+                                        await _hubContext.Clients.Client(request.ConnectionId).SendAsync("DownloadProgress", progress);
                                     }
                                 }
 
@@ -688,8 +687,7 @@ namespace ImgApiForNg.Controllers
                         Console.WriteLine($"Upload To The Database Progress: {progress}%");
 
                         // Send progress update to client via SignalR
-                        //await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveProgress", progress);
-                        await _hubContext.Clients.Client(connectionId).SendAsync("SendProgress", connectionId, progress, "upload");
+                        await _hubContext.Clients.Client(connectionId).SendAsync("UploadProgress", progress);
                     }
                 }
             }
@@ -734,8 +732,8 @@ namespace ImgApiForNg.Controllers
                         // Send progress update to client via SignalR
                         if (!string.IsNullOrEmpty(connectionId))
                         {
-                            //await _hubContext.Clients.Client(connectionId).SendAsync("UploadProgress", progress);
-                            await _hubContext.Clients.Client(connectionId).SendAsync("SendProgress", connectionId, progress, "upload");
+                            // Ensure the correct method call is used
+                            await _hubContext.Clients.Client(connectionId).SendAsync("UploadProgress", progress);
                         }
                     }
                 }
