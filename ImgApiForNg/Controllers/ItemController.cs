@@ -301,13 +301,15 @@ namespace ImgApiForNg.Controllers
                 return NotFound();
             }
 
-            _context.Items.Remove(item);
-            await _context.SaveChangesAsync();
-
             bool imageRemoved = await RemoveFileFromLocalFolderAsync(item.fileUrl);
             if (!imageRemoved)
             {
                 return NotFound();
+            }
+            else
+            {
+                _context.Items.Remove(item);
+                await _context.SaveChangesAsync();
             }
 
             return NoContent();
