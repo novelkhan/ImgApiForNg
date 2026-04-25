@@ -14,5 +14,6 @@ namespace ImgApiForNg.Data
         public DbSet<Man> Men { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<Prop> Props { get; set; }
+        public DbSet<ChunkedFileRecord> ChunkedFileRecords { get; set; }
     }
 }
