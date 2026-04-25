@@ -11,20 +11,18 @@ namespace ImgApiForNg.DTOs.ChunkedUpload
     /// </summary>
     public class InitializeUploadRequest
     {
-        /// <summary>Client generated unique ID for this upload session</summary>
         public string UploadId { get; set; } = string.Empty;
-
         public string FileName { get; set; } = string.Empty;
         public string FileType { get; set; } = string.Empty;
-
-        /// <summary>Total file size in bytes</summary>
         public long FileSize { get; set; }
-
-        /// <summary>How many chunks the file will be split into</summary>
         public int TotalChunks { get; set; }
-
-        /// <summary>Size of each chunk in bytes</summary>
         public long ChunkSize { get; set; }
+
+        // ✅ কোন method এ upload শুরু হয়েছে
+        public string UploadMethod { get; set; } = "LocalFile";
+
+        // ✅ Client side এ upload শুরুর সময় (Unix ms)
+        public long ClientStartTimeMs { get; set; } = 0;
     }
 
 
@@ -41,6 +39,12 @@ namespace ImgApiForNg.DTOs.ChunkedUpload
         public string FileType { get; set; } = string.Empty;
         public long FileSize { get; set; }
         public int TotalChunks { get; set; }
+
+        // ✅ কোন method এ upload হয়েছে
+        public string UploadMethod { get; set; } = "LocalFile";
+
+        // ✅ Client side এ upload শুরুর সময় (Unix ms) — duration হিসাব করতে
+        public long ClientStartTimeMs { get; set; } = 0;
     }
 
 
@@ -59,9 +63,19 @@ namespace ImgApiForNg.DTOs.ChunkedUpload
         public long RawFileSize { get; set; }
         public int TotalChunks { get; set; }
         public string UploadId { get; set; } = string.Empty;
+
+        // ✅ কখন আপলোড হয়েছে (formatted string)
         public string UploadedAt { get; set; } = string.Empty;
 
-        /// <summary>Base64 string — শুধু single file get এ পাঠানো হয় (list এ নয়)</summary>
+        // ✅ কোন method এ আপলোড হয়েছে
+        public string UploadMethod { get; set; } = string.Empty;
+
+        // ✅ Duration — milliseconds
+        public long UploadDurationMs { get; set; }
+
+        // ✅ Duration — human readable (e.g. "3.2s", "1m 12s")
+        public string UploadDuration { get; set; } = string.Empty;
+
         public string? Filestring { get; set; } = null;
     }
 
@@ -73,6 +87,12 @@ namespace ImgApiForNg.DTOs.ChunkedUpload
     public class ChunkedUrlUploadRequest
     {
         public string Url { get; set; } = string.Empty;
+
+        // ✅ "UrlFrontend" অথবা "UrlBackend"
+        public string UploadMethod { get; set; } = "UrlBackend";
+
+        // ✅ Client side এ শুরুর সময় (Unix ms)
+        public long ClientStartTimeMs { get; set; } = 0;
     }
     
 }
